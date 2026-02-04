@@ -51,15 +51,25 @@
     
     /* MEJORA DEL TÍTULO: Legibilidad máxima */
     h1 {
-      font-family: 'Pacifico', cursive;
-      background: linear-gradient(to right, #39ff14, #fffb00, #ff6600);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      font-size: 2.3rem;
-      margin: 10px 0;
-      /* Sombra negra para resaltar del fondo amarillo */
-      filter: drop-shadow(2px 2px 0px #000);
-    }
+  font-family: 'Pacifico', cursive;
+  /* Degradado neón */
+  background: linear-gradient(to right, #39ff14, #fffb00, #ff6600);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  
+  font-size: 2.5rem; /* Un poco más grande para que se note el 'Legítimo' */
+  margin: 15px 0;
+  padding: 0 10px;
+  line-height: 1.4;
+
+  /* TRUCO DE VISIBILIDAD: Borde negro total alrededor de la letra */
+  text-shadow: 
+    -2px -2px 0 #000,  
+     2px -2px 0 #000,
+    -2px  2px 0 #000,
+     2px  2px 0 #000,
+     4px  4px 5px rgba(0,0,0,0.5); /* Sombra de profundidad */
+}
 
     /* CONTENEDOR DEL MAPA Y BOTÓN */
     .mapa-container {
