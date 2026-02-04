@@ -2,105 +2,94 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Legítimo Pan de Yuca Manabita</title>
   
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
     body {
       background: linear-gradient(135deg, #ccff00 0%, #ffff00 50%, #ff9900 100%);
       font-family: 'Montserrat', sans-serif;
       text-align: center;
-      padding: 10px;
+      padding: 0;
       margin: 0;
       min-height: 100vh;
       overflow-x: hidden;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    }
+
+    /* BARRA DE NOTIFICACIÓN DINÁMICA */
+    #barra-estado {
+      background: #ff0000; /* Inicia en rojo */
+      color: white;
+      padding: 12px;
+      font-weight: 900;
+      border-bottom: 4px solid #000;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      font-size: 1.1rem;
+      text-transform: uppercase;
     }
 
     .fondo-emojis {
       position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       z-index: 0;
       pointer-events: none;
     }
 
-    .emoji {
-      position: absolute;
-      opacity: 0.3;
-      filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.1));
-      animation: flotar 5s ease-in-out infinite;
-    }
+    .emoji { position: absolute; opacity: 0.25; animation: flotar 6s ease-in-out infinite; }
+    @keyframes flotar { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(10deg); } }
 
-    @keyframes flotar {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      50% { transform: translateY(-15px) rotate(5deg); }
-    }
-
-    .contenido-real {
-      position: relative;
-      z-index: 1;
-      width: 100%;
-      max-width: 420px;
-    }
+    .contenido-real { position: relative; z-index: 1; padding: 20px; }
     
-    /* TÍTULO OPTIMIZADO PARA MÁXIMA VISIBILIDAD */
     h1 {
       font-family: 'Pacifico', cursive;
-      color: #004d00; /* Verde esmeralda oscuro para base sólida */
-      font-size: 2.6rem;
-      margin: 20px 0 10px 0;
-      line-height: 1.1;
-      /* Sombra que crea un efecto neón y despega la letra del fondo */
-      text-shadow: 
-        2px 2px 0px #39ff14, /* Brillo verde neón */
-        -1px -1px 0px #fff;  /* Fina línea blanca para nitidez */
+      background: linear-gradient(to right, #39ff14, #fffb00, #ff6600);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: 2.3rem;
+      margin: 10px 0;
     }
 
-    .linea-neon {
-      height: 6px;
-      width: 120px;
-      background: #004d00;
-      margin: 0 auto 20px auto;
-      border-radius: 50px;
-      box-shadow: 0 0 10px #39ff14;
-    }
-
-    .ruta-info {
-      background: #000;
-      color: #39ff14;
-      padding: 20px;
+    #mapa {
+      height: 250px;
+      width: 90%;
+      max-width: 420px;
+      margin: 20px auto;
+      border: 4px solid #000;
       border-radius: 25px;
-      margin: 10px;
-      border: 3px dashed #fffb00;
-      box-shadow: 0px 8px 20px rgba(0,0,0,0.3);
+      box-shadow: 8px 8px 0px #000;
+      background: #eee;
     }
 
-    .btn-ubicacion {
+    .btn-control {
       background: #fffb00;
       color: #000;
-      padding: 18px;
+      padding: 18px 30px;
       border: 3px solid #000;
       border-radius: 50px;
-      font-size: 1.1rem;
+      font-size: 16px;
       font-weight: 900;
-      display: block;
-      margin: 15px auto 0 auto;
-      text-decoration: none;
-      box-shadow: 5px 5px 0px #000;
-      width: 90%;
+      cursor: pointer;
+      box-shadow: 4px 4px 0px #000;
       text-transform: uppercase;
+      margin: 10px;
     }
 
     .menu-card {
-      background-color: #fff;
-      padding: 25px;
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 20px;
       border-radius: 30px;
-      margin: 20px 10px;
-      border: 4px solid #000;
+      margin: 20px auto;
+      max-width: 420px;
+      border: 3px solid #000;
       box-shadow: 8px 8px 0px #000;
     }
 
@@ -109,67 +98,40 @@
       background: linear-gradient(to bottom, #ff4e00, #ff0000);
       color: white;
       padding: 15px;
-      border-radius: 20px;
+      border-radius: 25px;
       border: 3px solid #000;
     }
 
-    .precio-grande {
-      font-size: 3.5rem;
-      display: block;
-      color: #ffff00;
-      font-weight: 900;
-      text-shadow: 3px 3px 0px #000;
-      margin: 5px 0;
-    }
-
     .opcion-neon {
-      background: white;
-      color: #000;
-      padding: 10px;
-      border-radius: 12px;
-      margin: 8px 0;
-      font-weight: 900;
-      border: 2px solid #000;
-      font-size: 0.9rem;
+      background: white; color: #000; padding: 10px;
+      border-radius: 12px; margin: 8px 0; font-weight: 800; border: 2px solid #000;
     }
 
-    @keyframes vibrar {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.04); }
-      100% { transform: scale(1); }
-    }
     .vibrar { animation: vibrar 1.5s infinite; }
-
-    @media (max-width: 380px) {
-      h1 { font-size: 2.1rem; }
-      .precio-grande { font-size: 2.8rem; }
-    }
+    @keyframes vibrar { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
   </style>
 </head>
 <body>
 
+  <div id="barra-estado">❌ RUTA ACTUALMENTE CERRADA</div>
+
   <div class="fondo-emojis">
-    <div class="emoji" style="top: 5%; left: 8%;">🥯</div>
-    <div class="emoji" style="top: 15%; right: 5%;">🚚</div>
-    <div class="emoji" style="top: 35%; left: 5%;">🥤</div>
-    <div class="emoji" style="bottom: 15%; right: 10%;">😋</div>
-    <div class="emoji" style="bottom: 5%; left: 10%;">😍</div>
+    <div class="emoji" style="top: 10%; left: 5%; font-size: 40px;">🥯</div>
+    <div class="emoji" style="top: 20%; right: 10%; font-size: 50px; animation-delay: 1s;">🚚</div>
+    <div class="emoji" style="top: 50%; left: 8%; font-size: 45px; animation-delay: 2s;">🥤</div>
   </div>
 
   <div class="contenido-real">
-    <h1>Legítimo Pan de Yuca Manabita</h1>
-    <div class="linea-neon"></div>
+    <h1>Pan de Yuca Manabita</h1>
 
-    <div class="ruta-info">
-      <p style="margin: 0; font-size: 1.3rem; font-weight: 900;">🚚 ¡ESTAMOS EN RUTA!</p>
-      <p style="font-size: 0.9rem; margin: 8px 0;">Recorremos la ciudad para llegar a ti.</p>
-      <a href="https://wa.me/593984637626?text=Hola!%20Donde%20se%20encuentran?%20Quiero%20pan%20de%20yuca" class="btn-ubicacion vibrar">
-        📍 VER UBICACIÓN EN VIVO
-      </a>
-    </div>
+    <div id="mapa"></div>
+
+    <button id="btn-maestro" class="btn-control vibrar">
+      📍 INICIAR RUTA
+    </button>
 
     <div class="menu-card">
-      <h2 style="margin: 0 0 15px 0; font-size: 1.5rem;">PRECIOS</h2>
+       <h2 style="margin: 0 0 15px 0; font-size: 1.5rem;">PRECIOS</h2>
       <p style="font-size: 1.3rem; font-weight: 900; margin: 10px 0;">Funda de 4 Panes: $1.00</p>
       <p style="font-size: 1.3rem; font-weight: 900; margin: 10px 0;">Vaso de Yogurt: $0.75</p>
       <p style="font-size: 1.3rem; font-weight: 900; margin: 10px 0;">Combo 4 Panes + Vaso de Yogurt: $1.50</p>
@@ -183,9 +145,83 @@
         <div class="opcion-neon">🥤 +2 YOGURTS GRATIS</div>
       </div>
     </div>
-
-    <p style="margin-top: 20px; font-weight: 900; color: #000; font-size: 1.1rem;">🥖 CALIDAD MANABITA 😋</p>
   </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+
+<script>
+  // --- CONFIGURACIÓN DE FIREBASE (Reemplaza con tus datos de la consola) ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyDVc_G_0LlsqqSaMGzucebnUnUqszOoZcs",
+    databaseURL: "https://pan-de-yuca-default-rtdb.firebaseio.com",
+    projectId: "pan-de-yuca",
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // --- VARIABLES DE CONTROL ---
+  const CLAVE_ADMIN = "panyuca.2026";
+  let watchId = null;
+  let rutaActiva = false;
+  const barra = document.getElementById('barra-estado');
+  const btn = document.getElementById('btn-maestro');
+
+  // Inicializar Mapa
+  const map = L.map('mapa').setView([-1.024, -79.46], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  let marker = L.marker([-1.024, -79.46]).addTo(map);
+
+  // --- ESCUCHAR CAMBIOS (Para el Cliente) ---
+  // Esto hace que la app de todos se actualice cuando tú te mueves
+  db.ref('ubicacion_ruta').on('value', (snapshot) => {
+    const data = snapshot.val();
+    if (data && data.estado === "activo") {
+      const pos = [data.lat, data.lon];
+      map.setView(pos, 16);
+      marker.setLatLng(pos).bindPopup("🚚 ¡Pan de yuca en camino!").openPopup();
+      barra.style.background = "#39ff14";
+      barra.style.color = "#000";
+      barra.innerText = "✅ ¡ESTAMOS EN RUTA! REVISA EL MAPA";
+    } else {
+      barra.style.background = "#ff0000";
+      barra.style.color = "#fff";
+      barra.innerText = "❌ RUTA ACTUALMENTE CERRADA";
+      marker.bindPopup("Ruta cerrada").closePopup();
+    }
+  });
+
+  // --- FUNCIÓN DEL ADMINISTRADOR ---
+  btn.addEventListener('click', () => {
+    const passwordIngresada = prompt("Ingrese la clave de Administrador:");
+    if (passwordIngresada !== CLAVE_ADMIN) return alert("Clave incorrecta");
+
+    if (!rutaActiva) {
+      if (navigator.geolocation) {
+        rutaActiva = true;
+        watchId = navigator.geolocation.watchPosition(pos => {
+          const coords = {
+            lat: pos.coords.latitude,
+            lon: pos.coords.longitude,
+            estado: "activo"
+          };
+          // ENVIAR A LA NUBE
+          db.ref('ubicacion_ruta').set(coords);
+          btn.innerText = "🛑 SUSPENDER RUTA";
+          btn.style.background = "#ff4e00";
+        }, null, { enableHighAccuracy: true });
+      }
+    } else {
+      // APAGAR RUTA EN LA NUBE
+      navigator.geolocation.clearWatch(watchId);
+      rutaActiva = false;
+      db.ref('ubicacion_ruta').update({ estado: "inactivo" });
+      btn.innerText = "📍 INICIAR RUTA";
+      btn.style.background = "#fffb00";
+    }
+  });
+</script>
+
 
 </body>
 </html>
