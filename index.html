@@ -22,7 +22,7 @@
 
     /* BARRA DE NOTIFICACIÓN DINÁMICA */
     #barra-estado {
-      background: #ff0000; /* Inicia en rojo */
+      background: #ff0000;
       color: white;
       padding: 12px;
       font-weight: 900;
@@ -49,6 +49,7 @@
 
     .contenido-real { position: relative; z-index: 1; padding: 20px; }
     
+    /* MEJORA DEL TÍTULO: Legibilidad máxima */
     h1 {
       font-family: 'Pacifico', cursive;
       background: linear-gradient(to right, #39ff14, #fffb00, #ff6600);
@@ -56,18 +57,47 @@
       -webkit-text-fill-color: transparent;
       font-size: 2.3rem;
       margin: 10px 0;
+      /* Sombra negra para resaltar del fondo amarillo */
+      filter: drop-shadow(2px 2px 0px #000);
     }
 
-    #mapa {
-      height: 250px;
+    /* CONTENEDOR DEL MAPA Y BOTÓN */
+    .mapa-container {
+      position: relative;
       width: 90%;
       max-width: 420px;
       margin: 20px auto;
+    }
+
+    #mapa {
+      height: 280px;
+      width: 100%;
       border: 4px solid #000;
       border-radius: 25px;
       box-shadow: 8px 8px 0px #000;
       background: #eee;
     }
+
+    /* BOTÓN LOCALIZAR AUTOMÁTICO */
+    .btn-centrar {
+      position: absolute;
+      bottom: 15px;
+      right: 15px;
+      z-index: 1000;
+      background: #fff;
+      border: 3px solid #000;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 4px 4px 0px #000;
+      transition: 0.2s;
+    }
+    .btn-centrar:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
 
     .btn-control {
       background: #fffb00;
@@ -102,6 +132,8 @@
       border: 3px solid #000;
     }
 
+    .precio-grande { font-size: 3rem; font-weight: 900; display: block; margin: 5px 0; color: #fffb00; text-shadow: 2px 2px 0px #000; }
+
     .opcion-neon {
       background: white; color: #000; padding: 10px;
       border-radius: 12px; margin: 8px 0; font-weight: 800; border: 2px solid #000;
@@ -124,7 +156,10 @@
   <div class="contenido-real">
     <h1>Pan de Yuca Manabita</h1>
 
-    <div id="mapa"></div>
+    <div class="mapa-container">
+      <div id="mapa"></div>
+      <button class="btn-centrar" onclick="centrarEnRuta()" id="btn-snap">🎯</button>
+    </div>
 
     <button id="btn-maestro" class="btn-control vibrar">
       📍 INICIAR RUTA
@@ -134,24 +169,23 @@
        <h2 style="margin: 0 0 15px 0; font-size: 1.5rem;">PRECIOS</h2>
       <p style="font-size: 1.3rem; font-weight: 900; margin: 10px 0;">Funda de 4 Panes: $1.00</p>
       <p style="font-size: 1.3rem; font-weight: 900; margin: 10px 0;">Vaso de Yogurt: $0.75</p>
-      <p style="font-size: 1.3rem; font-weight: 900; margin: 10px 0;">Combo 4 Panes + Vaso de Yogurt: $1.50</p>
+      <p style="font-size: 1.3rem; font-weight: 900; margin: 10px 0;">Combo 4 Panes + Yogurt: $1.50</p>
       
       <div class="promo-box">
         <p style="font-size: 1.1rem; font-weight: 900; margin: 0;">⚡ PROMO EXPLOSIVA ⚡</p>
         <span class="precio-grande">$5.00</span>
         <p style="font-weight: 900; margin: 5px 0;">¡Llevas 5 fundas y ELIGES!</p>
         <div class="opcion-neon">🎁 +1 FUNDA GRATIS</div>
-        <div >O</div>
+        <div style="font-weight: 900; margin: 5px;">O</div>
         <div class="opcion-neon">🥤 +2 YOGURTS GRATIS</div>
       </div>
     </div>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
 <script>
-  // --- CONFIGURACIÓN DE FIREBASE (Reemplaza con tus datos de la consola) ---
   const firebaseConfig = {
     apiKey: "AIzaSyDVc_G_0LlsqqSaMGzucebnUnUqszOoZcs",
     databaseURL: "https://pan-de-yuca-default-rtdb.firebaseio.com",
@@ -160,26 +194,36 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // --- VARIABLES DE CONTROL ---
   const CLAVE_ADMIN = "panyuca.2026";
   let watchId = null;
   let rutaActiva = false;
+  let ultimaPosicion = { lat: -1.024, lon: -79.46 }; // Guardar la última para el botón 🎯
+
   const barra = document.getElementById('barra-estado');
   const btn = document.getElementById('btn-maestro');
 
   // Inicializar Mapa
-  const map = L.map('mapa').setView([-1.024, -79.46], 13);
+  const map = L.map('mapa').setView([ultimaPosicion.lat, ultimaPosicion.lon], 13);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-  let marker = L.marker([-1.024, -79.46]).addTo(map);
+  let marker = L.marker([ultimaPosicion.lat, ultimaPosicion.lon]).addTo(map);
+
+  // FUNCIÓN PARA CENTRAR AUTOMÁTICAMENTE
+  function centrarEnRuta() {
+    map.flyTo([ultimaPosicion.lat, ultimaPosicion.lon], 17, {
+      animate: true,
+      duration: 1.5
+    });
+  }
 
   // --- ESCUCHAR CAMBIOS (Para el Cliente) ---
-  // Esto hace que la app de todos se actualice cuando tú te mueves
   db.ref('ubicacion_ruta').on('value', (snapshot) => {
     const data = snapshot.val();
     if (data && data.estado === "activo") {
+      ultimaPosicion = { lat: data.lat, lon: data.lon };
       const pos = [data.lat, data.lon];
-      map.setView(pos, 16);
+      
       marker.setLatLng(pos).bindPopup("🚚 ¡Pan de yuca en camino!").openPopup();
+      
       barra.style.background = "#39ff14";
       barra.style.color = "#000";
       barra.innerText = "✅ ¡ESTAMOS EN RUTA! REVISA EL MAPA";
@@ -205,23 +249,22 @@
             lon: pos.coords.longitude,
             estado: "activo"
           };
-          // ENVIAR A LA NUBE
           db.ref('ubicacion_ruta').set(coords);
           btn.innerText = "🛑 SUSPENDER RUTA";
           btn.style.background = "#ff4e00";
+          btn.style.color = "#fff";
         }, null, { enableHighAccuracy: true });
       }
     } else {
-      // APAGAR RUTA EN LA NUBE
       navigator.geolocation.clearWatch(watchId);
       rutaActiva = false;
       db.ref('ubicacion_ruta').update({ estado: "inactivo" });
       btn.innerText = "📍 INICIAR RUTA";
       btn.style.background = "#fffb00";
+      btn.style.color = "#000";
     }
   });
 </script>
-
 
 </body>
 </html>
