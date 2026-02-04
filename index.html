@@ -90,15 +90,6 @@
       color: white; padding: 15px; border-radius: 25px; border: 3px solid #000;
     }
 
-    .resenas-card {
-      background: #fff; padding: 20px; border-radius: 25px; margin: 20px auto;
-      max-width: 420px; border: 3px solid #000; box-shadow: 8px 8px 0px #000; text-align: left;
-    }
-    .resena-item { border-bottom: 1px solid #eee; padding: 8px 0; font-size: 0.9rem; }
-    .resena-item b { color: #ff4e00; }
-    input, textarea { width: 92%; margin: 5px 0; padding: 8px; border: 2px solid #000; border-radius: 10px; font-family: inherit; }
-    .btn-enviar { background: #000; color: #fff; padding: 10px; border-radius: 10px; width: 100%; font-weight: 900; border: none; cursor: pointer; }
-
     .vibrar { animation: vibrar 1.5s infinite; }
     @keyframes vibrar { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
   </style>
@@ -144,13 +135,6 @@
       </div>
     </div>
 
-    <div class="resenas-card">
-      <h3 style="margin:0 0 10px 0;">Reseñas y Sugerencias ⭐</h3>
-      <div id="lista-resenas" style="max-height: 200px; overflow-y: auto; margin-bottom: 10px;"></div>
-      <input type="text" id="nombre-resena" placeholder="Tu nombre">
-      <textarea id="texto-resena" placeholder="¿Qué tal estuvo tu pedido?" rows="2"></textarea>
-      <button class="btn-enviar" onclick="enviarResena()">Publicar Reseña</button>
-    </div>
   </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
@@ -204,15 +188,7 @@
   db.ref('likes').on('value', s => { document.getElementById('count-likes').innerText = s.val() || 0; });
   function darLike() { db.ref('likes').transaction(c => (c || 0) + 1); }
 
-  function enviarResena() {
-    const nombre = document.getElementById('nombre-resena').value;
-    const texto = document.getElementById('texto-resena').value;
-    if (nombre && texto) {
-      db.ref('resenas').push({ nombre, texto, fecha: Date.now() });
-      document.getElementById('nombre-resena').value = "";
-      document.getElementById('texto-resena').value = "";
     }
-  }
 
   db.ref('resenas').limitToLast(10).on('value', s => {
     const lista = document.getElementById('lista-resenas');
